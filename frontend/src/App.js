@@ -31,9 +31,18 @@ function App() {
     try {
       const url = query ? `${API_BASE_URL}?search=${encodeURIComponent(query)}` : API_BASE_URL;
       const response = await axios.get(url);
-      setFoods(response.data);
+      
+      // Kiểm tra dữ liệu trả về để đảm bảo luôn là mảng
+      if (Array.isArray(response.data)) {
+        setFoods(response.data);
+      } else if (response.data && Array.isArray(response.data.foods)) {
+        setFoods(response.data.foods);
+      } else {
+        setFoods([]);
+      }
     } catch (err) {
-      setError('Loi khi tải danh sách món ăn: ' + (err.response?.data?.message || err.message));
+      setError('Lỗi khi tải danh sách món ăn: ' + (err.response?.data?.message || err.message));
+      setFoods([]);
     } finally {
       setLoading(false);
     }
@@ -269,13 +278,13 @@ function App() {
             <p className="loading">Đang tải dữ liệu...</p>
           ) : (
             <div className="food-grid">
-              {foods.map((food) => (
+              {Array.isArray(foods) && foods.map((food) => (
                 <div key={food._id || food.foodId} className="food-card">
                   {food.imageUrl && <img src={food.imageUrl} alt={food.name} className="food-img" />}
                   <div className="food-info">
                     <h3>{food.name} ({food.foodId})</h3>
                     <p><strong>Loại:</strong> {food.category} | <strong>Ẩm thực:</strong> {food.cuisine}</p>
-                    <p><strong>Giá:</strong> {food.price.toLocaleString('vi-VN')} VNĐ</p>
+                    <p><strong>Giá:</strong> {food.price?.toLocaleString('vi-VN')} VNĐ</p>
                     <p><strong>Số lượng:</strong> {food.quantity}</p>
                     <div className="card-actions">
                       <button className="btn btn-info" onClick={() => setSelectedFood(food)}>Xem chi tiết</button>
@@ -298,7 +307,7 @@ function App() {
             <p><strong>Tên món:</strong> {selectedFood.name}</p>
             <p><strong>Loại:</strong> {selectedFood.category}</p>
             <p><strong>Ẩm thực:</strong> {selectedFood.cuisine}</p>
-            <p><strong>Giá:</strong> {selectedFood.price.toLocaleString('vi-VN')} VNĐ</p>
+            <p><strong>Giá:</strong> {selectedFood.price?.toLocaleString('vi-VN')} VNĐ</p>
             <p><strong>Số lượng còn:</strong> {selectedFood.quantity}</p>
             <p><strong>Nguyên liệu:</strong> {Array.isArray(selectedFood.ingredients) ? selectedFood.ingredients.join(', ') : selectedFood.ingredients}</p>
             <p><strong>Mô tả:</strong> {selectedFood.description}</p>
